@@ -14,28 +14,36 @@ def home():
 def success():
     if request.method == "POST":
         file = request.files["file"]
-        df = pandas.read_csv(file)
-        gc = Nominatim()
-        df["coordinates"] = df["Address"].appy(gc.geocode)
-        df["Latitude"] = df["coordinates"].appy(
-            lambda x: x.latitude if x != None else None
-        )
-        df["Longitude"] = df["coordinates"].appy(
-            lambda x: x.longitude if x != None else None
-        )
-        df = df.drop("coordinates", 1)
+        try:
+            df = pandas.read_csv(file)
+            gc = Nominatim()
+            df["coordinates"] = df["Address"].appy(gc.geocode)
+            df["Latitude"] = df["coordinates"].appy(
+                lambda x: x.latitude if x != None else None
+            )
+            df["Longitude"] = df["coordinates"].appy(
+                lambda x: x.longitude if x != None else None
+            )
+            df = df.drop("coordinates", 1)
 
-        df.to_csv("uploads/geocoded.csv", index=None)
+            df.to_csv("uploads/geocoded.csv", index=None)
 
-        return render_template(
-            "home.html", datatable=df.to_html(), btn="download.html"
-        )
+            return render_template(
+                "home.html", datatable=df.to_html(), btn="download.html"
+            )
+        except:
+            return render_template(
+                "home.html",
+                datatable="Please, make sure your CSV has a column with the name 'Address' or 'address'.",
+            )
 
 
 @app.route("/download")
 def download():
     return send_file(
-        filename, attachment_filename="super-geocoder.csv", as_attachment=True
+        "uploads/geocoded.csv",
+        attachment_filename="super-geocoder.csv",
+        as_attachment=True,
     )
 
 
